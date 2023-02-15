@@ -27,6 +27,17 @@ colnames(demo2) = c("eid","inc_pair_matches_r1_TP1","inc_pair_matches_r2_TP1","i
 
 # match eids with the ones for which we have MRI data 
 demo2 = demo2[demo2$eid %in% MRI$eid,]
+# make time-point specific data frames
+TP1 = demo2 %>% select(ends_with("TP1"))
+TP2 = demo2 %>% select(ends_with("TP2"))
+# remove suffix from dfs
+TP1 = TP1 %>% 
+  rename_at(.vars = vars(ends_with("_TP1")),
+            .funs = funs(sub("_TP1$", "", .)))
+TP2 = TP2 %>% 
+  rename_at(.vars = vars(ends_with("_TP2")),
+            .funs = funs(sub("_TP2$", "", .)))
 
 # write the final file with the cognitive scores
-write.csv(demo2, "cog.csv")
+write.csv(TP1, "TP1_cog.csv")
+write.csv(TP2, "TP2_cog.csv")
