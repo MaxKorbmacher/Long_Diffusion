@@ -64,6 +64,9 @@ T2$TP = factor(T2$TP)
 # make single df
 data = rbind(T1, T2)
 data$AgeDiff = c(replicate(nrow(T1),0), T2$age - T1$age)
+data$TP = factor(data$TP)
+levels(data$TP) = c("baseline","repeat")
+data$TP = factor(data$TP,levels=rev(levels(data$TP)))
 
 ############### #
 ### MISSINGNESS #
@@ -516,6 +519,8 @@ bplotstd = function(Beta_Table){
     ylab("Standardized Beta of Age") + xlab("") + ylim(-0.075,0.04) + scale_x_discrete(limits = rev(factor(var_labels)))+ coord_flip()
 }
 plot1 = bplotstd(MM_betas)
+ggsave("CogAgeAssocitation.pdf", width = 7, height = 9, plot1)
+
 # 
 # # unstandardized betas, if of interest
 # bplot = function(Beta_Table){
@@ -544,75 +549,6 @@ plot1 = bplotstd(MM_betas)
 # annotate_figure(figure, #left = textGrob("Variables", rot = 90, vjust = 1, gp = gpar(cex = 1.3)),
 #                 bottom = textGrob("Standardized Beta", gp = gpar(cex = 1.3)))
 
-##### 4.2.) Ageing & cognitive changes ####
-
-### STANDARDIZED BETAS
-
-# compile standardized beta values for a variable specified in ROW_NUMBER, e.g. for age ROW_NUMBER = 1
-ROW_NUMBER = 5
-
-# change the ROW_NUMBER value accordingly!
-
-# estimate betas, standard errors, T-values and p-values
-LMb = c()
-LMstde = c()
-LMt = c()
-LMp = c()
-RIb = c()
-RIstde = c()
-MMb = c()
-MMstde = c()
-MMt = c()
-MMp = c()
-for (i in 1:length(outcome_vars)){
-  LMb[i] = as.numeric(LMstd[[i]]$coefficients[ROW_NUMBER+1])
-  LMstde[i] = as.numeric(sqrt(diag(vcov(LMstd[[i]])))[ROW_NUMBER+1])
-  LMt[i] = as.numeric(coef(summary(LMstd[[i]]))[, "t value"][ROW_NUMBER+1])
-  LMp[i] = as.numeric(coef(summary(LMstd[[i]]))[, "Pr(>|t|)"][ROW_NUMBER+1])
-  RIb[i] = as.numeric(fixef(RIstd[[i]])[ROW_NUMBER-1])
-  RIstde[i] = summary(RIstd[[i]])$coefficients[ROW_NUMBER-1,2]
-  MMb[i] = as.numeric(MMstd[[i]]$coefficients[ROW_NUMBER+1])
-  MMstde[i] = coef(summary(MMstd[[i]]))[ROW_NUMBER+1,2]
-  MMt[i] = as.numeric(coef(summary(MMstd[[i]]))[, "t-value"][ROW_NUMBER+1])
-  MMp[i] = as.numeric(coef(summary(MMstd[[i]]))[, "p-value"][ROW_NUMBER+1])
-}
-
-# make data frames
-var_labels = c("Incorrect Pair Matches Round 1","Incorrect Pair Matches Round 2",
-               "Incorrect Pair Matches Round 3","Maximum Number of Digits Remembered",
-               "Fluid Intelligence", "Prospective Memory", "Self-Rated Health", 
-               "Response Time Matrix Puzzle 1", "Response Time Matrix Puzzle 2", 
-               "Response Time Matrix Puzzle 3", "Response Time Matrix Puzzle 4", 
-               "Response Time Matrix Puzzle 5", "Response Time Matrix Puzzle 6", 
-               "Response Time Matrix Puzzle 7", "Response Time Matrix Puzzle 8", 
-               "Response Time Matrix Puzzle 9", "Response Time Matrix Puzzle 10", 
-               "Response Time Matrix Puzzle 11", "Response Time Matrix Puzzle 12", 
-               "Response Time Matrix Puzzle 13", "Response Time Matrix Puzzle 14", 
-               "Response Time Matrix Puzzle 15", "Solved Matrix Puzzles", "Viewed Matrix Puzzles",
-               "Solved Tower Puzzles", "Solved Symbol Digit Matches")
-LM_betas = data.frame(LMb, LMstde,LMt,LMp, var_labels)
-RI_betas = data.frame(RIb, RIstde, var_labels)
-MM_betas = data.frame(MMb, MMstde, MMt, MMp, var_labels)
-colnames(LM_betas) = c("Std.Beta", "Std.Err", "T.val", "p.val", "Outcome")
-colnames(RI_betas) =  c("Std.Beta", "Std.Err", "Outcome")
-colnames(MM_betas) =  c("Std.Beta", "Std.Err", "T.val", "p.val", "Outcome")
-bplotstd = function(Beta_Table){
-  ggplot(Beta_Table, aes(x=Outcome, y=Std.Beta, color=outcome_vars)) + 
-    geom_pointrange(aes(ymin=Std.Beta-Std.Err, ymax=Std.Beta+Std.Err)) + theme_bw() + theme(legend.position = "none") +
-    ylab("Standardized Beta of Time Point") + xlab("") + ylim(-0.2,0.2) + scale_x_discrete(limits = rev(factor(var_labels)))+ coord_flip()
-}
-#bplotstd(LM_betas)
-#bplotstd(RI_betas)
-plot2 = bplotstd(MM_betas)
-
-AgeCog = ggarrange(plot1, plot2, ncol = 2)
-ggsave("CogAgeAssocitation.pdf", width = 12, height = 9, AgeCog)
-
-# Holm correction
-MM_betas$p.adj = p.adjust(MM_betas$p.val,method = "holm")
-# Write the table with p-vals for the effect of time point on cognitive measures
-p_table = MM_betas %>% select(Outcome,Std.Beta,Std.Err, T.val, p.val, p.adj)
-write.csv(p_table, "P_Table_Time_point.csv")
 
 # # check p-vals between time points, if wanted.
 # for (i in 3:28){
