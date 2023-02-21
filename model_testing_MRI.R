@@ -19,16 +19,14 @@
 ###### 3.3.2 MODEL FIT                            #
 ## 4) PLOT                                        #
 ################################################# #
-
 ## 1) PREP ENV ####
-
+summary(MM[[1]])
 # load packages and install if not already installed
 remove.packages("sjPlot")
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(lme4, nlme, ggplot2, tidyverse, lm.beta, remotes, ggpubr, grid, lmtest, car, lmtest)
+pacman::p_load(lme4, nlme, ggplot2, tidyverse, lm.beta, remotes, ggpubr, grid, lmtest, car, lmtest,lmeInfo)
 #install_version("sjstats","0.17.7")
 library(sjstats)
-
 ## 2) PREP DATA ####
 # set working directory where the data files are situated
 setwd("/home/max/Documents/Projects/Diffusion/UKBlong/data_export/")
@@ -49,6 +47,7 @@ T1$time = 0
 data = rbind(T1, T2)
 data$TP = factor(data$TP)
 levels(data$TP) = c("baseline","repeat")
+#data$TP = factor(data$TP,levels=rev(levels(data$TP)))
 
 ## 3) ANALYSE ####
 #################### #
@@ -131,6 +130,8 @@ for (i in 1:length(outcome_vars)){
   MMt[i] = as.numeric(coef(summary(MMstd[[i]]))[, "t-value"][ROW_NUMBER+1])
   MMp[i] = as.numeric(coef(summary(MMstd[[i]]))[, "p-value"][ROW_NUMBER+1])
 }
+
+
 # make data frames
 var_labels = c("BRIA - V intra", "BRIA - V extra", "BRIA - V csf", "BRIA - micro RD","BRIA - micro FA",
                        "BRIA - micro AX", "BRIA - micro ADC", "BRIA - DAX intra", "BRIA - DAX extra",
@@ -507,9 +508,11 @@ summary(MM3[[25]])$coefficients
 bplot = function(Beta_Table){
   ggplot(Beta_Table, aes(x=Outcome, y=Std.Beta, color=Outcome)) + 
     geom_pointrange(aes(ymin=Std.Beta-Std.Err, ymax=Std.Beta+Std.Err)) + theme_bw() + theme(legend.position = "none") +
-    ylab("Standardized Beta of Age") + xlab("") + ylim(-.075,.075) + scale_x_discrete(limits = rev(factor(var_labels)))+ coord_flip()
+    ylab("Standardized Beta of Age") + xlab("") + ylim(-.2,.2) + scale_x_discrete(limits = rev(factor(var_labels)))+ coord_flip()
 }
 plot1=bplot(MM_betas)
+ggsave("DiffusionAgeAssocitation.pdf", width = 7, height = 9, plot1)
+
 # # unstandardized betas
 # bplot = function(Beta_Table){
 #   ggplot(Beta_Table, aes(x=outcome_vars, y=UnStd.Beta, color=outcome_vars)) + 
@@ -524,7 +527,7 @@ plot1=bplot(MM_betas)
 # bplot = function(Beta_Table){
 #   ggplot(Beta_Table, aes(x=Outcome, y=Std.Beta, color=Outcome)) +
 #     geom_pointrange(aes(ymin=Std.Beta-Std.Err, ymax=Std.Beta+Std.Err)) + theme_bw() + theme(legend.position = "none") +
-#     ylab("") + xlab("Standardized Beta") + ylim(-.3,.3) + scale_x_discrete(limits = rev(factor(var_labels)))+ coord_flip()
+#     ylab("") + xlab("") + ylim(-.3,.3) + scale_x_discrete(limits = rev(factor(var_labels)))+ coord_flip()
 # }
 # # create one plot for each model (linear regression, random intercept, marginal model)
 # LM_plot = bplot(LM_betas)
@@ -536,58 +539,3 @@ plot1=bplot(MM_betas)
 # # anotate figure
 # annotate_figure(figure, #left = textGrob("Variables", rot = 90, vjust = 1, gp = gpar(cex = 1.3)),
 #                 bottom = textGrob("Standardized Beta", gp = gpar(cex = 1.3)))
-# 
-
-
-# compile standardized beta values for a variable specified in ROW_NUMBER, e.g. for age ROW_NUMBER = 1
-ROW_NUMBER = 5
-
-# change the ROW_NUMBER value accordingly!
-
-# estimate betas, standard errors, T-values and p-values
-LMb = c()
-LMstde = c()
-LMt = c()
-LMp = c()
-RIb = c()
-RIstde = c()
-MMb = c()
-MMstde = c()
-MMt = c()
-MMp = c()
-for (i in 1:length(outcome_vars)){
-  LMb[i] = as.numeric(LMstd[[i]]$coefficients[ROW_NUMBER+1])
-  LMstde[i] = as.numeric(sqrt(diag(vcov(LMstd[[i]])))[ROW_NUMBER+1])
-  LMt[i] = as.numeric(coef(summary(LMstd[[i]]))[, "t value"][ROW_NUMBER+1])
-  LMp[i] = as.numeric(coef(summary(LMstd[[i]]))[, "Pr(>|t|)"][ROW_NUMBER+1])
-  RIb[i] = as.numeric(fixef(RIstd[[i]])[ROW_NUMBER-1])
-  RIstde[i] = summary(RIstd[[i]])$coefficients[ROW_NUMBER-1,2]
-  MMb[i] = as.numeric(MMstd[[i]]$coefficients[ROW_NUMBER+1])
-  MMstde[i] = coef(summary(MMstd[[i]]))[ROW_NUMBER+1,2]
-  MMt[i] = as.numeric(coef(summary(MMstd[[i]]))[, "t-value"][ROW_NUMBER+1])
-  MMp[i] = as.numeric(coef(summary(MMstd[[i]]))[, "p-value"][ROW_NUMBER+1])
-}
-
-# make data frames
-LM_betas = data.frame(LMb, LMstde,LMt,LMp, var_labels)
-RI_betas = data.frame(RIb, RIstde, var_labels)
-MM_betas = data.frame(MMb, MMstde, MMt, MMp, var_labels)
-colnames(LM_betas) = c("Std.Beta", "Std.Err", "T.val", "p.val", "Outcome")
-colnames(RI_betas) =  c("Std.Beta", "Std.Err", "Outcome")
-colnames(MM_betas) =  c("Std.Beta", "Std.Err", "T.val", "p.val", "Outcome")
-bplotstd = function(Beta_Table){
-  ggplot(Beta_Table, aes(x=Outcome, y=Std.Beta, color=outcome_vars)) + 
-    geom_pointrange(aes(ymin=Std.Beta-Std.Err, ymax=Std.Beta+Std.Err)) + theme_bw() + theme(legend.position = "none") +
-    ylab("Standardized Beta of Time Point") + xlab("") + ylim(-0.2,0.2) + scale_x_discrete(limits = rev(factor(var_labels)))+ coord_flip()
-}
-#bplotstd(LM_betas)
-#bplotstd(RI_betas)
-plot2 = bplotstd(MM_betas)
-AgeCog = ggarrange(plot1, plot2, ncol = 2)
-ggsave("DiffusionAgeAssocitation.pdf", width = 12, height = 9, AgeCog)
-
-# Holm correction
-MM_betas$p.adj = p.adjust(MM_betas$p.val,method = "holm")
-# Write the table with p-vals for the effect of time point on cognitive measures
-p_table = MM_betas %>% select(Outcome,Std.Beta,Std.Err, T.val, p.val, p.adj)
-write.csv(p_table, "P_Table_Time_point_DIFF.csv")
