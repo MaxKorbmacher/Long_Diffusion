@@ -103,6 +103,50 @@ paired_t$logp = formatMpfr(logp)
 paired_t$Effect <- "No time point difference"
 paired_t$Effect[paired_t$d > 0 & as.numeric(paired_t$logp) > -log10(0.05)] <- "Increase"
 paired_t$Effect[paired_t$d < 0 & (paired_t$logp) > -log10(0.05)] <- "Decrease"
+# add cleaner text for labels which will be printed
+paired_t$outcome_vars = gsub("radEAD_Fornix_StriaterminalisR", "WMTI - radEAD Fornix-StTer(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("radEAD_Fornix", "WMTI - radEAD Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("FA_Fornix_StriaterminalisR", "DTI - FA Fornix-StTer(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("AD_Fornix", "DTI - AD Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("AD_Middlecerebellarpeduncle", "DTI - AD MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("MD_Middlecerebellarpeduncle", "DTI - MD MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("FA_Fornix", "DTI - FA Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("FA_FMIN", "DTI - FA FMIN",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("FA_BodyCC", "DTI - FA BodyCC",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("RD_BodyCC", "DTI - RD BodyCC",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("MD_Fornix", "DTI - MD Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("RD_Fornix", "DTI - RD Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("RD_Fornix_StriaterminalisR", "DTI - RD Fornix-StTer(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("rk_Fornix", "DKI - RK Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("mk_Fornix", "DKI - MK Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("ak_Fornix", "DKI - AK Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_FA_Fornix", "BRIA - micro FA Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("v_intra_Fornix", "BRIA - v intra Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("v_extra_Fornix", "BRIA - v extra Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_ADC_Fornix", "BRIA - micro ADC Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("v_csf_Fornix", "BRIA - v csf Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("v_csf_Middlecerebellarpeduncle", "BRIA - v csf MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_Rd_Middlecerebellarpeduncle", "BRIA - micro RD MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_Rd_Fornix", "BRIA - micro RD Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_Ax_Fornix", "BRIA - micro AX Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_Ax_SLTFR", "BRIA - micro AX SLTF(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_Ax_Middlecerebellarpeduncle", "BRIA - micro AX MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("Dax_intra_Middlecerebellarpeduncle", "BRIA - DAX intra MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("Dax_extra_Middlecerebellarpeduncle", "BRIA - DAX extra MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("micro_ADC_Middlecerebellarpeduncle", "BRIA - micro ADC MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_long_Middlecerebellarpeduncle", "SMT - long MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_trans_SuperiorcerebellarpeduncleR", "SMT - trans SCP(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_fa_SuperiorcerebellarpeduncleR", "SMT - FA SCP(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_md_InferiorcerebellarpeduncleR", "SMT - MD ICP(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_md_Middlecerebellarpeduncle", "SMT - MD MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_long_InferiorcerebellarpeduncleR", "SMT - long ICP(R)",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_mc_intra_Fornix", "SMTmc - intra Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_mc_diff_Middlecerebellarpeduncle", "SMTmc - MD MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_mc_extramd_Fornix", "SMTmc - extra MD Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_mc_extramd_Middlecerebellarpeduncle", "SMTmc - extra MD MCP",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("smt_mc_extratrans_Fornix", "SMTmc - extra trans Fornix",paired_t$outcome_vars)
+paired_t$outcome_vars = gsub("awf_Fornix", "WMTI - AWF Fornix",paired_t$outcome_vars)
+# plot
 plot = ggplot(data=paired_t, aes(x=d, y=as.numeric(logp), label=outcome_vars, col = Effect)) +
   geom_point() + 
   theme_minimal() +
@@ -125,8 +169,8 @@ plot = ggplot(data=paired_t, aes(x=d, y=as.numeric(logp), label=outcome_vars, co
   #scale_color_manual(values=c("#0072B2","#D55E00", "#999999", "#56B4E9", "#E69F00"))+
   scale_color_manual(values=c("#56B4E9","#D55E00", "#999999"))+
   #scale_color_manual(values=c("blue","red", "black", "orange", "purple"))+
-  geom_vline(xintercept=c(-0.5, 0.5), col="black") +
-  geom_hline(yintercept=-log10(0.05), col="black") + 
+  geom_vline(xintercept = c(-0.5, 0.5), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_hline(yintercept=c(-log10(0.05), 500), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
   #geom_hline(yintercept= 500, col="black") + 
   #geom_hline(yintercept=(600), col="black") + 
   xlab("")+
@@ -143,6 +187,8 @@ prop.table(table(paired_t$Effect))
 #################### #
 # make sure that TP2 -TP1 to see the right direction of developments 
 data$TP = ordered(data$TP, levels =  c("repeat","baseline"))
+data$sex = factor(data$sex)
+levels(data$sex) = c("female", "male")
 # make empty list to be filled
 RI = list()
 # loop over outcome_vars and run the same LM, RI and MM models for each outcome var.
@@ -189,6 +235,105 @@ write.csv(betas[[2]], "/home/max/Documents/Projects/Diffusion/UKBlong/Results/RE
 write.csv(betas[[3]], "/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_effect_of_timepoint.csv")
 write.csv(betas[[4]], "/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_effect_of_age_sex_interaction.csv")
 
+# we plot AGE effects (betas and p-vals)
+dmri = betas[[1]]
+# we use log-transformed p-values for visualisation purposes
+dmri$logp = -log(dmri$p.adj)
+# first, add a column of directionality for beta values / slopes
+dmri$Slope <- "No age effect"
+dmri$Slope[dmri$Std.Beta > 0 & dmri$logp > -log10(0.05)] <- "Positive association"
+dmri$Slope[dmri$Std.Beta < 0 & dmri$logp > -log10(0.05)] <- "Negative association"
+
+# fix labels
+dmri$Outcome = gsub("RD_Fornix_StriaterminalisR", "DTI - RD Fornix-StTer(R)",dmri$Outcome)
+dmri$Outcome = gsub("radEAD_Fornix_StriaterminalisR", "WMTI - radEAD Fornix-StTer(R)",dmri$Outcome)
+dmri$Outcome = gsub("FA_Fornix_StriaterminalisR", "DTI - FA Fornix-StTer(R)",dmri$Outcome)
+dmri$Outcome = gsub("micro_FA_Fornix", "BRIA - micro FA Fornix",dmri$Outcome)
+dmri$Outcome = gsub("micro_Rd_Fornix", "BRIA - micro RD Fornix",dmri$Outcome)
+dmri$Outcome = gsub("AD_Fornix", "DTI - AD Fornix",dmri$Outcome)
+dmri$Outcome = gsub("FA_Fornix", "DTI - FA Fornix",dmri$Outcome)
+dmri$Outcome = gsub("FA_FMIN", "DTI - FA FMIN",dmri$Outcome)
+dmri$Outcome = gsub("MD_Fornix", "DTI - MD Fornix",dmri$Outcome)
+dmri$Outcome = gsub("RD_Fornix", "DTI - RD Fornix",dmri$Outcome)
+dmri$Outcome = gsub("rk_Fornix", "DKI - RK Fornix",dmri$Outcome)
+dmri$Outcome = gsub("mk_Fornix", "DKI - MK Fornix",dmri$Outcome)
+dmri$Outcome = gsub("ak_Fornix", "DKI - AK Fornix",dmri$Outcome)
+dmri$Outcome = gsub("v_intra_Fornix", "BRIA - v intra Fornix",dmri$Outcome)
+dmri$Outcome = gsub("v_extra_Fornix", "BRIA - v extra Fornix",dmri$Outcome)
+dmri$Outcome = gsub("micro_ADC_Fornix", "BRIA - micro ADC Fornix",dmri$Outcome)
+dmri$Outcome = gsub("v_csf_Fornix", "BRIA - v csf Fornix",dmri$Outcome)
+dmri$Outcome = gsub("micro_Ax_Fornix", "BRIA - micro AX Fornix",dmri$Outcome)
+dmri$Outcome = gsub("smt_mc_intra_Fornix", "SMTmc - intra Fornix",dmri$Outcome)
+dmri$Outcome = gsub("smt_mc_extramd_Fornix", "SMTmc - extra MD Fornix",dmri$Outcome)
+dmri$Outcome = gsub("smt_mc_extratrans_Fornix", "SMTmc - extra trans Fornix",dmri$Outcome)
+dmri$Outcome = gsub("awf_Fornix", "WMTI - AWF Fornix",dmri$Outcome)
+dmri$Outcome = gsub("radEAD_Fornix", "WMTI - radEAD Fornix",dmri$Outcome)
+
+# then plot (volcano plot)
+plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
+  geom_point() + 
+  theme_minimal() +
+  geom_vline(xintercept = c(-0.5, 0.5), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_hline(yintercept=-log10(0.05), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_text_repel(data = subset(dmri, Std.Beta < -0.5),colour='black', nudge_x = -0.7, direction = "y", segment.size = 0.1, xlim = c(-0.3,-1.2))+
+  geom_text_repel(data = subset(dmri, Std.Beta > 0.5),colour='black', nudge_x = 0.7, direction = "y",segment.size = 0.1, xlim = c(0.3,1.2))+
+  # geom_text_repel(
+  #   force        = 0.25,
+  #   #nudge_x      = -0.25,
+  #   #direction    = "y",
+  #   #hjust        = 1,
+  #   #segment.size = 0.1,
+  #   max.overlaps = Inf,
+  #   colour='black')+
+  #scale_fill_brewer(palette="Dark2")
+  #scale_color_manual(values=c("#56B4E9","#D55E00", "#999999", "#0072B2", "#E69F00"))+
+  scale_color_manual(values=c("#56B4E9","#999999","#D55E00"))+
+  #scale_color_manual(values=c("blue","red", "black", "orange", "purple"))+
+  #geom_vline(xintercept=c(-0.075, 0.075), col="black") +
+  #geom_hline(yintercept=-log10(0.05), col="black") + 
+  xlab("")+ylab("-log10(Bonferroni-corrected p)")+
+  xlim(-1.2,1.2)+
+  theme(legend.position="bottom")#+labs(title = "Associations of MRI features' lateralisation and age")
+ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_volcano_AGE.pdf",plot2, height = 7, width = 11)
+
+
+# we plot only time point differences (betas and p-vals)
+dmri = betas[[2]]
+# we use log-transformed p-values for visualisation purposes
+dmri$logp = -log(dmri$p.adj)
+# first, add a column of directionality for beta values / slopes
+dmri$Slope <- "No sex difference"
+dmri$Slope[dmri$Std.Beta > 0 & dmri$logp > -log10(0.05)] <- "Increase"
+dmri$Slope[dmri$Std.Beta < 0 & dmri$logp > -log10(0.05)] <- "Decrease"
+
+# then plot (volcano plot)
+plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
+  geom_point() + 
+  theme_minimal() +
+  geom_vline(xintercept = c(-0.5, 0.5), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_hline(yintercept=-log10(0.05), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_text_repel(data = subset(dmri, Std.Beta < -0.5),colour='black', nudge_x = -0.7, direction = "y", segment.size = 0.1, xlim = c(-0.3,-1.2))+
+  geom_text_repel(data = subset(dmri, Std.Beta > 0.5),colour='black', nudge_x = 0.7, direction = "y",segment.size = 0.1, xlim = c(0.3,1.2))+
+  # geom_text_repel(
+  #   force        = 0.25,
+  #   #nudge_x      = -0.25,
+  #   #direction    = "y",
+  #   #hjust        = 1,
+  #   #segment.size = 0.1,
+  #   max.overlaps = Inf,
+  #   colour='black')+
+  #scale_fill_brewer(palette="Dark2")
+  #scale_color_manual(values=c("#56B4E9","#D55E00", "#999999", "#0072B2", "#E69F00"))+
+  scale_color_manual(values=c("#56B4E9","#D55E00","#999999"))+
+  #scale_color_manual(values=c("blue","red", "black", "orange", "purple"))+
+  #geom_vline(xintercept=c(-0.075, 0.075), col="black") +
+  #geom_hline(yintercept=-log10(0.05), col="black") + 
+  xlab("")+ylab("-log10(Bonferroni-corrected p)")+
+  xlim(-1.2,1.2)+
+  theme(legend.position="bottom")#+labs(title = "Associations of MRI features' lateralisation and age")
+ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_volcano_SEX.pdf",plot2, height = 7, width = 11)
+
+
 # we plot only time point differences (betas and p-vals)
 dmri = betas[[3]]
 # we use log-transformed p-values for visualisation purposes
@@ -202,8 +347,10 @@ dmri$Slope[dmri$Std.Beta < 0 & dmri$logp > -log10(0.05)] <- "Decrease"
 plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
   geom_point() + 
   theme_minimal() +
-  geom_text_repel(data = subset(dmri, Std.Beta < -0.5),colour='black', nudge_x = -0.5, direction = "y", segment.size = 0.1, xlim = c(-0.3,-0.9))+
-  geom_text_repel(data = subset(dmri, Std.Beta > 0.5),colour='black', nudge_x = 0.5, direction = "y",segment.size = 0.1, xlim = c(0.3,0.9))+
+  geom_vline(xintercept = c(-0.25, 0.25), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_hline(yintercept=-log10(0.05), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_text_repel(data = subset(dmri, Std.Beta < -0.25),colour='black', nudge_x = -0.5, direction = "y", segment.size = 0.1, xlim = c(-0.3,-0.9))+
+  geom_text_repel(data = subset(dmri, Std.Beta > 0.25),colour='black', nudge_x = 0.5, direction = "y",segment.size = 0.1, xlim = c(0.3,0.9))+
   # geom_text_repel(
   #   force        = 0.25,
   #   #nudge_x      = -0.25,
@@ -214,12 +361,50 @@ plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
   #   colour='black')+
   #scale_fill_brewer(palette="Dark2")
   #scale_color_manual(values=c("#56B4E9","#D55E00", "#999999", "#0072B2", "#E69F00"))+
-  scale_color_manual(values=c("#0072B2","#D55E00", "#999999", "#56B4E9", "#E69F00"))+
+  scale_color_manual(values=c("#56B4E9","#D55E00", "#999999"))+
   #scale_color_manual(values=c("blue","red", "black", "orange", "purple"))+
   #geom_vline(xintercept=c(-0.075, 0.075), col="black") +
   #geom_hline(yintercept=-log10(0.05), col="black") + 
   xlab("")+ylab("-log10(Bonferroni-corrected p)")+
   xlim(-0.9,0.9)+
   theme(legend.position="bottom")#+labs(title = "Associations of MRI features' lateralisation and age")
-ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_volcano.pdf",plot2, height = 7, width = 15)
+ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_volcano_TIMEPOINT.pdf",plot2, height = 7, width = 15)
+
+hist(dmri$Std.Beta)
+
+# we plot only time point differences (betas and p-vals)
+dmri = betas[[4]]
+# we use log-transformed p-values for visualisation purposes
+dmri$logp = -log(dmri$p.adj)
+# first, add a column of directionality for beta values / slopes
+dmri$Slope <- "No sex difference"
+dmri$Slope[dmri$Std.Beta > 0 & dmri$logp > -log10(0.05)] <- "Increase"
+dmri$Slope[dmri$Std.Beta < 0 & dmri$logp > -log10(0.05)] <- "Decrease"
+
+# then plot (volcano plot)
+plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
+  geom_point() + 
+  theme_minimal() +
+  geom_vline(xintercept = c(-0.25, 0.25), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_hline(yintercept=-log10(0.05), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_text_repel(data = subset(dmri, Std.Beta < -0.25),colour='black', nudge_x = -0.5, direction = "y", segment.size = 0.1, xlim = c(-0.3,-0.9))+
+  geom_text_repel(data = subset(dmri, Std.Beta > 0.25),colour='black', nudge_x = 0.5, direction = "y",segment.size = 0.1, xlim = c(0.3,0.9))+
+  # geom_text_repel(
+  #   force        = 0.25,
+  #   #nudge_x      = -0.25,
+  #   #direction    = "y",
+  #   #hjust        = 1,
+  #   #segment.size = 0.1,
+  #   max.overlaps = Inf,
+  #   colour='black')+
+  #scale_fill_brewer(palette="Dark2")
+  #scale_color_manual(values=c("#56B4E9","#D55E00", "#999999", "#0072B2", "#E69F00"))+
+  scale_color_manual(values=c("#56B4E9","#D55E00", "#999999"))+
+  #scale_color_manual(values=c("blue","red", "black", "orange", "purple"))+
+  #geom_vline(xintercept=c(-0.075, 0.075), col="black") +
+  #geom_hline(yintercept=-log10(0.05), col="black") + 
+  xlab("")+ylab("-log10(Bonferroni-corrected p)")+
+  xlim(-0.9,0.9)+
+  theme(legend.position="bottom")#+labs(title = "Associations of MRI features' lateralisation and age")
+ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_volcano_SEX_AGE_INTERACTION.pdf",plot2, height = 7, width = 15)
 
