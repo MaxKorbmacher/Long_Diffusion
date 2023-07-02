@@ -139,7 +139,7 @@ for (i in 1:length(outcome_vars)){
   d_lower[i] = as.numeric(cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$conf.int[1])
   d_upper[i] = as.numeric(cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$conf.int[2])
 }
-p.adj = p.adjust(p.val,method = "holm")
+p.adj = p.adjust(p.val,method = "bonferroni")
 paired_t_out = data.frame(var_labels, mean_TP1, sd_TP1, mean_TP2, sd_TP2, t.val, p.val, p.adj, d,d_lower, d_upper)
 paired_t_out = data.frame(lapply(paired_t_out,function(x) if(is.numeric(x)) round(x, 3) else x))
 colnames(paired_t_out) = c("Metric", "Mean TP1","SD TP1",  "Mean TP2","SD TP1", "T", "p", "adjusted p", "Cohens's d", "Lower 95% CI", "Upper 95% CI")
@@ -207,8 +207,8 @@ for (ROW_NUMBER in 1:4){
   RI_betas = data.frame(var_labels, RIb, RIstde, RIp)
   # correct labelling of column names
   colnames(RI_betas) =  c("Outcome","Std.Beta", "Std.Err", "p")
-  # Holm correction
-  RI_betas$p.adj = p.adjust(RI_betas$p,method = "holm")
+  # Bonferroni correction
+  RI_betas$p.adj = p.adjust(RI_betas$p,method = "bonferroni")
   RI_betas$Model = diffusion_models
   betas[[ROW_NUMBER]] = data.frame(lapply(RI_betas,function(x) if(is.numeric(x)) round(x, 3) else x))
 }
