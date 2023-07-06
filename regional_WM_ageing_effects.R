@@ -93,6 +93,8 @@ paired_t_out = paired_t
 colnames(paired_t_out) = c("Metric", "Mean TP1","SD TP1",  "Mean TP2","SD TP1", "T", "p", "adjusted p", "Cohens's d", "Lower 95% CI", "Upper 95% CI")
 # write the table
 write.csv(paired_t_out, "/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_paired_t_results.csv")
+
+
 # make a figure summarizing the findings
 
 ## add for this -log10 adjusted p-values and labels for colour
@@ -296,6 +298,23 @@ plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
   theme(legend.position="bottom")#+labs(title = "Associations of MRI features' lateralisation and age")
 ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_volcano_AGE.pdf",plot2, height = 7, width = 11)
 
+# density plot
+filtered_dmri = dmri %>% filter(logp > -log10(0.05))
+pdf(file="/home/max/Documents/Projects/Diffusion/UKBlong/Results/density.pdf", width = 12, height = 7)
+par(mfrow=c(1,2))
+## including non-significant results
+plot(density(dmri$Std.Beta), main = "Kernel density of Standardized Beta Coefficients")
+## excluding non-significant results
+dens2 = plot(density(filtered_dmri$Std.Beta), main = "Kernel density of Standardized Beta Coefficients (p < .05)")
+dev.off()
+# checking meta stats of the age-WM microstructure (regional) relations
+## including all betas
+dmri %>% filter(Std.Beta < 0) %>% summarize(Mean = mean(Std.Beta), SD = sd(Std.Beta), Median = median(Std.Beta), MeanAbsDev = mad(Std.Beta))
+dmri %>% filter(Std.Beta > 0)  %>% summarize(Mean = mean(Std.Beta), SD = sd(Std.Beta), Median = median(Std.Beta), MeanAbsDev = mad(Std.Beta))
+
+## excluding p<.05
+filtered_dmri %>% filter(Std.Beta < 0) %>% summarize(Mean = mean(Std.Beta), SD = sd(Std.Beta), Median = median(Std.Beta), MeanAbsDev = mad(Std.Beta))
+filtered_dmri %>% filter(Std.Beta > 0)  %>% summarize(Mean = mean(Std.Beta), SD = sd(Std.Beta), Median = median(Std.Beta), MeanAbsDev = mad(Std.Beta))
 
 # we plot only time point differences (betas and p-vals)
 dmri = betas[[2]]
@@ -385,10 +404,10 @@ dmri$Slope[dmri$Std.Beta < 0 & dmri$logp > -log10(0.05)] <- "Decrease"
 plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
   geom_point() + 
   theme_minimal() +
-  geom_vline(xintercept = c(-0.25, 0.25), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
+  geom_vline(xintercept = c(-0.1, 0.1), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
   geom_hline(yintercept=-log10(0.05), color = "red", linetype = "dashed", cex = 1, alpha = 0.2) +
-  geom_text_repel(data = subset(dmri, Std.Beta < -0.25),colour='black', nudge_x = -0.5, direction = "y", segment.size = 0.1, xlim = c(-0.3,-0.9))+
-  geom_text_repel(data = subset(dmri, Std.Beta > 0.25),colour='black', nudge_x = 0.5, direction = "y",segment.size = 0.1, xlim = c(0.3,0.9))+
+  geom_text_repel(data = subset(dmri, Std.Beta < -0.1 & logp>-log10(0.05)),colour='black', nudge_x = -0.5, direction = "y", segment.size = 0.1, xlim = c(-0.3,-0.9))+
+  geom_text_repel(data = subset(dmri, Std.Beta > 0.1 & logp>-log10(0.05)),colour='black', nudge_x = 0.5, direction = "y",segment.size = 0.1, xlim = c(0.3,0.9))+
   # geom_text_repel(
   #   force        = 0.25,
   #   #nudge_x      = -0.25,
@@ -408,3 +427,65 @@ plot2 = ggplot(data=dmri, aes(x=Std.Beta, y=logp,col = Slope, label=Outcome)) +
   theme(legend.position="bottom")#+labs(title = "Associations of MRI features' lateralisation and age")
 ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_volcano_SEX_AGE_INTERACTION.pdf",plot2, height = 7, width = 15)
 
+
+# 3) ANALYSE COGNITVE DECLINE
+# load data
+setwd("/home/max/Documents/Projects/Diffusion/UKBlong/data_export/")
+# load data (without DRAD extra outliers removed as there were many outliers)
+T1_cog = read.csv("TP1_cog.csv")
+T2_cog = read.csv("TP2_cog.csv")
+T1_cog$TP = replicate(nrow(T1_cog),"baseline")
+T2_cog$TP = replicate(nrow(T2_cog),"repeat")
+cog = rbind(T1_cog, T2_cog)
+levels(cog$TP) = c("baseline", "repeat")
+cog$TP = ordered(cog$TP, levels =  c("repeat","baseline"))
+
+# check missingness (Matrix response time has a lot of missingness)
+for (i in 1:ncol(T1_cog)){
+  print(sum(is.na(T1_cog[i])))
+  print(sum(is.na(T2_cog[i])))
+}
+# # unselect matrix trials 14 and 15
+# T1_cog = T1_cog %>% select(-c(Matrix_RT14,Matrix_RT15))
+# T2_cog = T2_cog %>% select(-c(Matrix_RT14,Matrix_RT15))
+
+# run paired t-test (as done before)
+p.val = c()
+t.val = c()
+df = c()
+CohensD = c()
+mean_TP1_cog = c()
+sd_TP1_cog = c()
+mean_TP2_cog = c()
+sd_TP2_cog = c()
+d = c()
+d_upper = c()
+d_lower = c()
+outcomes = colnames(T1_cog[3:28])
+
+for (i in outcomes){
+  f = formula(paste("cog$",i,"~ cog$TP", sep = ""))
+  # some of the p values will be rounded to 0. We need to use a more accurate approach (see below)
+  test = t.test(f, paired = TRUE, na.action = na.pass)
+  t.val[i] = test$parameter
+  p.val[i] = test$p.value
+  # we need to include the degrees of freedom due to wild missingness
+  df[i] = test$parameter
+}
+
+for (i in 1:length(outcomes)){
+  mean_TP1_cog[i] = mean(T1_unstd[,i])
+  sd_TP1_cog[i] = sd(T1_unstd[,i])
+  mean_TP2_cog[i] = mean(T2_unstd[,i])
+  sd_TP2_cog[i] = sd(T2_unstd[,i])
+  d[i] = cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$estimate
+  d_lower[i] = as.numeric(cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$conf.int[1])
+  d_upper[i] = as.numeric(cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$conf.int[2])
+}
+p.adj = (p.val*length(outcomes))
+paired_t = data.frame(outcomes, mean_TP1_cog, sd_TP1_cog, mean_TP2_cog, sd_TP2_cog, t.val, df, (p.val),(p.adj), d,d_lower, d_upper)
+paired_t_out = paired_t
+paired_t_out = data.frame(lapply(paired_t_out,function(x) if(is.numeric(x)) round(x, 3) else x))
+colnames(paired_t_out) = c("Metric", "Mean TP1_cog","SD TP1_cog",  "Mean TP2_cog","SD TP2_cog_cog", "T","df", "p", "adjusted p", "Cohens's d", "Lower 95% CI", "Upper 95% CI")
+# write the table
+write.csv(paired_t_out, "/home/max/Documents/Projects/Diffusion/UKBlong/Results/COG_DECLINE_paired_t_results.csv")

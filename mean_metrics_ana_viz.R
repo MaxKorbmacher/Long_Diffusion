@@ -126,7 +126,7 @@ for (i in 1:27){
 # #for an overview of the values:
 # data.frame(lm_r.sq1,lm_r.sq2,gam_r.sq1,gam_r.sq2)
 
-# SCATTER PLOT OF PREDICTED VALUES ####
+# SCATTER PLOT OF PREDICTED VALUES >> DIFFERENTIATING BETWEEN TIME POINTS ####
 # now, plot each of the predictions in a scatter plot with two time points and a fitted line
 lm_plot = list()
 for (i in 1:length(y_lab)){
@@ -168,3 +168,46 @@ lm_plots = do.call("grid.arrange", c(lm_plot,ncol = 3))
 smooth_plots = do.call("grid.arrange", c(smooth_plot,ncol = 3))
 ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/ADJ_smooth_ageing_plots.pdf",smooth_plots, width = 15, height = 20)
 ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/ADJ_lm_ageing_plots.pdf",lm_plots, width = 15, height = 20)
+
+# SCATTER PLOT OF PREDICTED VALUES >> NOT DIFFERENTIATING BETWEEN TIME POINTS ####
+# now, plot each of the predictions in a scatter plot with two time points and a fitted line
+lm_plot = list()
+for (i in 1:length(y_lab)){
+  lm_plot[[i]] = ggplot(data=linear_predictions[[i]],aes(x=age, y=fit,color = TP))+ 
+    #geom_line(aes(y=fit,group=ID),alpha=.4,lwd=.5) + #,col=TP
+    #geom_point(aes(y=fit,shape=factor(TP), col=TP),alpha=.6) +#
+    #geom_ribbon(aes(group=TP,ymin=lwr,ymax=upr),alpha=0.3,fill="grey") + 
+    geom_smooth(method = "lm") +
+    # stat_regline_equation(
+    #   aes(label =  paste(..eq.label.., ..adj.rr.label.., sep = "~~~~")),
+    #   formula = formula(paste("data"[i]"~age")), data =data) +
+    #geom_smooth(method = "lm") +
+    #stat_regline_equation() +
+    #stat_cor()+
+    xlab("Age")+
+    ylab (paste(y_lab[i]))+ 
+    theme_bw() + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank())+
+    theme(legend.position = "none")+
+    labs(title = paste("TP1 R2 = ",round(lm_r.sq1[i],digits = 4), "      ","TP2 R2 = ", round(lm_r.sq2[i],digits = 4)))
+}
+
+# we can do the same for non-linear models
+smooth_plot = list()
+for (i in 1:length(y_lab)){
+  smooth_plot[[i]] = ggplot(data=linear_predictions[[i]],aes(x=age, y=fit,color = TP))+ 
+    geom_smooth(method = "gam") +
+    xlab("Age")+
+    ylab (paste(y_lab[i]))+ 
+    theme_bw() + 
+    theme(panel.grid.major = element_blank(), 
+          panel.grid.minor = element_blank())+
+    theme(legend.position = "none") +
+    labs(title = paste("TP1 R2 = ",round(gam_r.sq1[i],digits = 4), "      ","TP2 R2 = ", round(gam_r.sq2[i],digits = 4)))
+}
+
+lm_plots = do.call("grid.arrange", c(lm_plot,ncol = 3))
+smooth_plots = do.call("grid.arrange", c(smooth_plot,ncol = 3))
+ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/ONE_LINE_ADJ_smooth_ageing_plots.pdf",smooth_plots, width = 15, height = 20)
+ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/ONE_LINE_ADJ_lm_ageing_plots.pdf",lm_plots, width = 15, height = 20)
