@@ -27,7 +27,9 @@ site = T1$site_t3
 for (i in 1:27){
   tmpROC = scale(ROC[i]/abs(ROC[28]), center = FALSE)
   lm_list[[i]] = data.frame(age, sex, site, tmpROC)
-  colnames(lm_list[[i]]) = c("age","sex","site","ROC")
+  tmp_model = lmer(tmpROC ~ age:sex + sex + (1|site), data = lm_list[[i]])
+  lm_list[[i]]$fit = predict(tmp_model)
+  colnames(lm_list[[i]]) = c("age","sex","site","ROC", "fit")
 }
 # make name list of outcome variables in as in data frame
 outcome_vars = colnames(ROC[1:27])
@@ -49,7 +51,7 @@ var_labels = c("BRIA - V intra", "BRIA - V extra", "BRIA - V csf", "BRIA - micro
 ## 2) Global Annual Change Plots ####
 lm_plot = list()
 for (i in 1:length(var_labels)){
-  lm_plot[[i]] = ggplot(data=lm_list[[i]],aes(x=age, y=ROC))+ 
+  lm_plot[[i]] = ggplot(data=lm_list[[i]],aes(x=age, y=fit))+ 
     #geom_line(aes(y=fit,group=ID),alpha=.4,lwd=.5) + #,col=TP
     #geom_point(aes(y=fit,shape=factor(TP), col=TP),alpha=.6) +#
     #geom_ribbon(aes(group=TP,ymin=lwr,ymax=upr),alpha=0.3,fill="grey") + 
@@ -79,7 +81,7 @@ ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/annual_change_plo
 T1 = read.csv("T1_noDRAD.csv")
 T2 = read.csv("T2_noDRAD.csv")
 
-# now, we can substract one time point from the other
+# now, we can subtract one time point from the other
 ROC = T2[2:1934]-T1[4:1936]
 ROC = ROC %>% select(-eid)
 lm_list = list()
@@ -88,27 +90,58 @@ sex = T1$sex
 site = T1$site_t3
 age_diff = T2$age - T1$age
 for (i in 1:1932){
-  tmpROC = scale(ROC[[i]]/age_diff, center = FALSE)
+  tmpROC = scale(ROC[i]/abs(ROC[28]), center = FALSE)
   lm_list[[i]] = data.frame(age, sex, site, tmpROC)
-  colnames(lm_list[[i]]) = c("age","sex","site","ROC")
+  tmp_model = lmer(tmpROC ~ age:sex + sex + (1|site), data = lm_list[[i]])
+  lm_list[[i]]$fit = predict(tmp_model)
+  colnames(lm_list[[i]]) = c("age","sex","site","ROC", "fit")
 }
 
 # the many scatter plots visualisation is messy, we summarise the findings using correlations between age and absolute annual change:
 cors = c()
 for (i in 1:1932){
-  cors[i]=cor(abs(lm_list[[i]]$ROC), lm_list[[i]]$age)
+  cors[i]=cor(abs(lm_list[[i]]$fit), lm_list[[i]]$age)
 }
-
 cor_df = data.frame(col_names,cors)
+pos_cors = cor_df %>% filter(cors > 0)
+neg_cors = cor_df %>% filter(cors < 0)
 
-# the relationship between age and absolute annual change can be summarized in a density plot
-plot(density(cors))
+# the relationship between age and absolute annual change can be summarized in density plots
+abs_cors = data.frame(cors,col_names)
+pos_cors
+neg_cors
 
+# Basic density
+p1 = ggplot(abs_cors, aes(x=cors)) +
+  geom_density(fill="gray")+
+  geom_vline(aes(xintercept=mean(weight)), color="blue",
+             linetype="dashed")+
+  labs(title="Absolute RoC-age relationship density",x="RoC-age relationship", y = "Density")+
+  theme_classic()
+p2 = ggplot(neg_cors, aes(x=cors)) +
+  geom_density(fill="gray")+
+  geom_vline(aes(xintercept=mean(weight)), color="blue",
+             linetype="dashed")+
+  labs(title="Negative RoC-age relationship",x="RoC-age relationship", y = "Density")+
+  theme_classic()
+p3 = ggplot(pos_cors, aes(x=cors)) +
+  geom_density(fill="gray")+
+  geom_vline(aes(xintercept=mean(weight)), color="blue",
+             linetype="dashed")+
+  labs(title="Positive RoC-age relationship",x="RoC-age relationship", y = "Density")+
+  theme_classic()
+p4 = ggarrange(p1,0,p2,p3,ncol = 2, nrow = 2)
+ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/density_RoC_age_correlations.pdf",p4,height = 7, width = 7)
 # across all metrics the absolute annual rate of change - age relationship is > 0.
-t.test(cor_df$cors,mu=0)
-# however, this does not tell us whether the rate of change trends towards 0, or away from it.
-mean(cor_df$cors)
-sd(cor_df$cors)
+# we run t-tests and estimate Cohen's d
+t.test(abs(cor_df$cors),mu=0)
+mean(abs(cor_df$cors))/sd(abs(cor_df$cors))
+t.test(pos_cors$cors,mu=0)
+mean(abs(neg_cors$cors))/sd(abs(neg_cors$cors))
+t.test(neg_cors$cors,mu=0)
+mean(abs(pos_cors$cors))/sd(abs(pos_cors$cors))
+
+# however, this does not tell us whether the rate of change trends towards 0, or away from it!
 
 
 ## 4) Fornix Annual Changes ####
