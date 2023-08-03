@@ -4,6 +4,7 @@
 library(dplyr)
 library(ggplot2)
 library(ggpubr)
+library(ggrepel)
 
 ######## MEAN SKELETON VALUES #####
 
@@ -105,7 +106,6 @@ for (i in 1:length(names2)){
     coord_flip() + theme_bw() + xlab("Diffusion Metric") + ylab("Adjusted test-retest correlation")
   out[[i]] = tmp.plot
 }
-#plot4 = ggarrange(plotlist = out)
 plot4 = do.call(ggarrange, c(out, widths = c(2, 1)))
 ggsave("/home/max/Documents/Projects/Diffusion/test-retest/Adjusted_test_retest_regions_plot.pdf", plot4, height = 40, width = 30)
 ## loop over name list for UNadjusted test-retest associations
@@ -118,27 +118,21 @@ for (i in 1:length(names2)){
     coord_flip() + theme_bw() + xlab("Diffusion Metric") + ylab("Un-adjusted test-retest correlation")
   out[[i]] = tmp.plot
 }
-#plot4 = ggarrange(plotlist = out)
 plot5 = do.call(ggarrange, c(out, widths = c(2, 1)))
 ggsave("/home/max/Documents/Projects/Diffusion/test-retest/UnAdjusted_test_retest_regions_plot.pdf", plot5, height = 40, width = 30)
 
 # NEXT STEP: CLOUD OF TEXT ALONG A GRADIENT
-# something like this:
-plot <- ggplot(data_test, aes(color_my, y=1, label = text)) +  
-  geom_text_repel(
-    data=data_test[which(data_test$color_gray!=0),],
-    aes(color = color_my)) +  
-  geom_point(
-    data=data_test[which(data_test$color_gray!=0),],
-    aes(color = color_my)) +
-  geom_text_repel(
-    data=data_test[which(data_test$color_gray==0),],
-    color='magenta') +
-  geom_point(data=data_test[which(data_test$color_gray==0),],
-             color='magenta') +
-  scale_colour_gradientn(
-    colours = c("blue", "lightblue", "black", "orange", "red"),
-    values = rescale(colors_words_scale), aesthetics = "colour") +
-  ggplot2::theme_minimal()
-
-plot
+out1 = list()
+for (i in 1:length(names2)){
+  tmp.dat = all %>% filter(grepl(paste("^",names2[i], sep = ""), names1))
+  tmp.plot1 <- ggplot(tmp.dat, aes(x = betas, y=se, label = names1)) +
+    geom_point(aes(color = betas)) +
+    geom_text_repel(aes(label = names1, color = betas)) + theme_bw() + ylab("Standard Error") + xlab("Adjusted test-retest correlation") + scale_color_gradient(low = "blue", high = "red")
+  out1[[i]] = tmp.plot1
+  }
+# we want each page to include 2 plots 
+plot6 = ggarrange(plotlist = out1, ncol = 2)
+# then we can save them all separetely
+for (i in 1:length(plot6)){
+  ggsave(paste("/home/max/Documents/Projects/Diffusion/test-retest/Cloud_adjusted_test_retest_regions_plot",i,".pdf", sep = ""),plot6[[i]],height = 12, width = 17)
+}
