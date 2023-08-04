@@ -16,9 +16,13 @@ setwd("/home/max/Documents/Projects/Diffusion/UKBlong/data_export/")
 # load data (without DRAD extra outliers removed as there were many outliers)
 T1 = read.csv("T1_noDRAD.csv")
 T2 = read.csv("T2_noDRAD.csv")
-# hence, we have to exclude DRAD extra from our analysis, and focus on global average scores here
-T1 = T1 %>% dplyr::select(-contains("mean")) %>% dplyr::select(-contains("Drad_extra_")) %>% dplyr::select(-starts_with("X"))
-T2 = T2 %>% dplyr::select(-contains("mean")) %>% dplyr::select(-contains("Drad_extra_")) %>% dplyr::select(-starts_with("X"))
+outliers = read.csv("/home/max/Documents/Projects/Diffusion/UKBlong/data_export/outliers.csv")
+# exclude outliers / impossible values
+T1 = T1[!T1$eid %in% outliers$x,]
+T2 = T2[!T2$eid %in% outliers$x,]
+# We have to exclude DRAD extra (BRIA) and axEAD (WMTI) from our analysis, and focus on global average scores here
+T1 = T1 %>% dplyr::select(-contains("mean")) %>% dplyr::select(-contains("Drad_extra_")) %>% dplyr::select(-contains("axEAD")) %>% dplyr::select(-starts_with("X"))
+T2 = T2 %>% dplyr::select(-contains("mean")) %>% dplyr::select(-contains("Drad_extra_")) %>% dplyr::select(-contains("axEAD"))%>% dplyr::select(-starts_with("X"))
 
 # make unstandardized data frame prior to standardization
 T1_unstd = T1
@@ -49,10 +53,9 @@ data_unstd = data_unstd%>% relocate(eid, .after = last_col())
 T1_unstd = T1_unstd%>% relocate(eid, .after = last_col())
 T2_unstd = T2_unstd%>% relocate(eid, .after = last_col())
 
-# columns 1-1836 are diffusion metrics
-#colnames(data[1836:1843])
+# columns 1-1768 are diffusion metrics
 # these columns will be our outcome variables
-outcome_vars = colnames(data[1:1836])
+outcome_vars = colnames(data[1:1768])
 
 #################### #
 #### 2.0) paired samples t.tests for time point differences #### 
@@ -93,7 +96,6 @@ paired_t_out = paired_t
 colnames(paired_t_out) = c("Metric", "Mean TP1","SD TP1",  "Mean TP2","SD TP1", "T", "p", "adjusted p", "Cohens's d", "Lower 95% CI", "Upper 95% CI")
 # write the table
 write.csv(paired_t_out, "/home/max/Documents/Projects/Diffusion/UKBlong/Results/REGIONAL_paired_t_results.csv")
-
 
 # make a figure summarizing the findings
 
@@ -213,7 +215,7 @@ RIp = c()
 RIstde = c()
 RIb = c()
 betas = list()
-diffusion_models = c(replicate(9,"BRIA"), replicate(3, "DKI"), replicate(4, "DTI"), replicate(4, "SMT"), replicate(4, "SMTmc"), replicate(3, "WMTI"))
+diffusion_models = c(replicate(9,"BRIA"), replicate(3, "DKI"), replicate(4, "DTI"), replicate(4, "SMT"), replicate(4, "SMTmc"), replicate(2, "WMTI"))
 # estimate betas, standard errors, t-vals, p-vals
 for (ROW_NUMBER in 1:4){
   for (i in 1:length(outcome_vars)){
@@ -434,20 +436,28 @@ setwd("/home/max/Documents/Projects/Diffusion/UKBlong/data_export/")
 # load data (without DRAD extra outliers removed as there were many outliers)
 T1_cog = read.csv("TP1_cog.csv")
 T2_cog = read.csv("TP2_cog.csv")
+# exclude outliers / impossible values
+T1_cog = T1_cog[!T1_cog$eid %in% outliers$x,]
+T2_cog = T2_cog[!T2_cog$eid %in% outliers$x,]
+# create time point dummy
 T1_cog$TP = replicate(nrow(T1_cog),"baseline")
 T2_cog$TP = replicate(nrow(T2_cog),"repeat")
+
+# bind time points
 cog = rbind(T1_cog, T2_cog)
 levels(cog$TP) = c("baseline", "repeat")
 cog$TP = ordered(cog$TP, levels =  c("repeat","baseline"))
 
-# check missingness (Matrix response time has a lot of missingness)
-for (i in 1:ncol(T1_cog)){
-  print(sum(is.na(T1_cog[i])))
-  print(sum(is.na(T2_cog[i])))
-}
-# # unselect matrix trials 14 and 15
+# # check missingness (Matrix response time has a lot of missingness)
+# for (i in 1:ncol(T1_cog)){
+#   print(colnames(T1_cog[i]))
+#   print(sum(is.na(T1_cog[i])))
+#   print(sum(is.na(T2_cog[i])))
+# }
+# unselect matrix trials 14 and 15 due to massive missingness (not necessary, as there are some leftover participants)
 # T1_cog = T1_cog %>% select(-c(Matrix_RT14,Matrix_RT15))
 # T2_cog = T2_cog %>% select(-c(Matrix_RT14,Matrix_RT15))
+
 
 # run paired t-test (as done before)
 p.val = c()
@@ -461,26 +471,26 @@ sd_TP2_cog = c()
 d = c()
 d_upper = c()
 d_lower = c()
-outcomes = colnames(T1_cog[3:28])
-
+outcomes = colnames(cog[3:28])
 for (i in outcomes){
   f = formula(paste("cog$",i,"~ cog$TP", sep = ""))
   # some of the p values will be rounded to 0. We need to use a more accurate approach (see below)
-  test = t.test(f, paired = TRUE, na.action = na.pass)
+  test = t.test(formula = f, data = cog, paired = TRUE, na.action = na.pass)
   t.val[i] = test$parameter
   p.val[i] = test$p.value
   # we need to include the degrees of freedom due to wild missingness
   df[i] = test$parameter
 }
-
+T1_cog = T1_cog %>% select(-c(X,eid))
+T2_cog = T2_cog %>% select(-c(X,eid))
 for (i in 1:length(outcomes)){
-  mean_TP1_cog[i] = mean(T1_unstd[,i])
-  sd_TP1_cog[i] = sd(T1_unstd[,i])
-  mean_TP2_cog[i] = mean(T2_unstd[,i])
-  sd_TP2_cog[i] = sd(T2_unstd[,i])
-  d[i] = cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$estimate
-  d_lower[i] = as.numeric(cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$conf.int[1])
-  d_upper[i] = as.numeric(cohen.d(T2_unstd[,i], T1_unstd[,i], paired=TRUE)$conf.int[2])
+  mean_TP1_cog[i] = mean(T1_cog[,i], na.rm = T)
+  sd_TP1_cog[i] = sd(T1_cog[,i], na.rm = T)
+  mean_TP2_cog[i] = mean(T2_cog[,i], na.rm = T)
+  sd_TP2_cog[i] = sd(T2_cog[,i], na.rm = T)
+  d[i] = cohen.d(T2_cog[,i], T1_cog[,i], paired=TRUE, na.rm = T)$estimate
+  d_lower[i] = as.numeric(cohen.d(T2_cog[,i], T1_cog[,i], paired=TRUE, na.rm = T)$conf.int[1])
+  d_upper[i] = as.numeric(cohen.d(T2_cog[,i], T1_cog[,i], paired=TRUE, na.rm = T)$conf.int[2])
 }
 p.adj = (p.val*length(outcomes))
 paired_t = data.frame(outcomes, mean_TP1_cog, sd_TP1_cog, mean_TP2_cog, sd_TP2_cog, t.val, df, (p.val),(p.adj), d,d_lower, d_upper)
@@ -489,3 +499,4 @@ paired_t_out = data.frame(lapply(paired_t_out,function(x) if(is.numeric(x)) roun
 colnames(paired_t_out) = c("Metric", "Mean TP1_cog","SD TP1_cog",  "Mean TP2_cog","SD TP2_cog_cog", "T","df", "p", "adjusted p", "Cohens's d", "Lower 95% CI", "Upper 95% CI")
 # write the table
 write.csv(paired_t_out, "/home/max/Documents/Projects/Diffusion/UKBlong/Results/COG_DECLINE_paired_t_results.csv")
+

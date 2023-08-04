@@ -35,15 +35,21 @@ setwd("/home/max/Documents/Projects/Diffusion/UKBlong/data_export/")
 # load data (without DRAD extra outliers removed as there were many outliers)
 T1 = read.csv("T1_noDRAD.csv")
 T2 = read.csv("T2_noDRAD.csv")
+outliers = read.csv("/home/max/Documents/Projects/Diffusion/UKBlong/data_export/outliers.csv")
+# exclude outliers / impossible values
+T1 = T1[!T1$eid %in% outliers$x,]
+T2 = T2[!T2$eid %in% outliers$x,]
 # we have to exclude DRAD extra from our analysis, as this metric did poor in the QC
-T1 = T1 %>% dplyr::select(contains("mean"), age, sex, site_t3, eid) %>% dplyr::select(!Drad_extra_Mean)
-T2 = T2 %>% dplyr::select(contains("mean"), age, sex, site_t3, eid) %>% dplyr::select(!Drad_extra_Mean)
+T1 = T1 %>% dplyr::select(contains("mean"), age, sex, site_t3, eid) %>% dplyr::select(!Drad_extra_Mean)%>% dplyr::select(!axEAD_Mean)
+T2 = T2 %>% dplyr::select(contains("mean"), age, sex, site_t3, eid) %>% dplyr::select(!Drad_extra_Mean)%>% dplyr::select(!axEAD_Mean)
 
 # make unstandardized data frame prior to standardization
 T1_unstd = T1
 T2_unstd = T2
-data_unstd = rbind(T1, T2)
+data_unstd = rbind(T1_unstd, T2_unstd)
 
+# name outcome vars
+outcome_vars = colnames(T1[1:26])
 # standardize each diffusion metrics (Z-scoring) for later comparison
 for (i in 1:length(outcome_vars)){
   T1[,i] = (T1[,i]-(mean(T1[,i])))/(sd(T1[,i]))
@@ -64,9 +70,6 @@ levels(data$TP) = c("baseline","repeat")
 data_unstd$TP = factor(data$TP)
 levels(data_unstd$TP) = c("baseline","repeat")
 
-# make name list of outcome variables in as in data frame
-outcome_vars = colnames(data[1:27])
-
 # make name labels for the outcome_vars (more presentable)
 var_labels = c("BRIA - V intra", "BRIA - V extra", "BRIA - V csf", "BRIA - micro RD","BRIA - micro FA",
                "BRIA - micro AX", "BRIA - micro ADC", "BRIA - DAX intra", "BRIA - DAX extra",
@@ -79,7 +82,7 @@ var_labels = c("BRIA - V intra", "BRIA - V extra", "BRIA - V csf", "BRIA - micro
                
                "SMTmc - intra","SMTmc - extra MD", "SMTmc - extra trans",  "SMTmc - diff",
                
-               "WMTI - axEAD", "WMTI - AWF", "WMTI - radEAD")
+               "WMTI - AWF", "WMTI - radEAD")
 
 ## 2) DEMOGRAPHICS ####
 # N
@@ -94,7 +97,7 @@ max(T2$age)
 mean(T2$age)
 sd(T2$age)
 min(T2$age-T1$age)
-max(T1$age)
+max(T2$age-T1$age)
 mean(T2$age-T1$age)
 sd(T2$age-T1$age)
 
@@ -103,8 +106,8 @@ table(T1$sex)
 prop.table(table(data$sex))
 
 # site
+table(T1$site_t3)
 ## check whether site variable is the same for both time points (yes, they are)
-setequal(T2$site_t4,T1$site_t3)
 ## check the proportions
 prop.table(table(T1$site_t3))
 ## and raw numbers, if wanted
@@ -148,12 +151,12 @@ write.csv(paired_t_out, "/home/max/Documents/Projects/Diffusion/UKBlong/Results/
 # make a simple figure summarizing the effect sizes
 colnames(paired_t_out) = c("Metric", "Mean_TP1","SD_TP1", "Mean_TP2","SD_TP1", "T", "p", "adjusted_p", "Cohens_d", "LL", "UL")
 colnames(paired_t_out) = make.unique(names(paired_t_out))
-paired_t_out$Index = seq(1:27)
+paired_t_out$Index = seq(1:26)
 plot1 <- ggplot(paired_t_out, aes(y = Index, x = Cohens_d)) +
   geom_point(shape = 18, size = 5) +  
   geom_errorbarh(aes(xmin = LL, xmax = UL), height = 0.25) +
   geom_vline(xintercept = 0, color = "red", linetype = "dashed", cex = 1, alpha = 0.5) +
-  scale_y_continuous(name = "", breaks=1:27, labels = paired_t_out$Metric, trans = "reverse") +
+  scale_y_continuous(name = "", breaks=1:26, labels = paired_t_out$Metric, trans = "reverse") +
   xlab("Cohen's d (95% CI)") + 
   ylab(" ") + 
   theme_bw() +
@@ -196,7 +199,7 @@ RIp = c()
 RIstde = c()
 RIb = c()
 betas = list()
-diffusion_models = c(replicate(9,"BRIA"), replicate(3, "DKI"), replicate(4, "DTI"), replicate(4, "SMT"), replicate(4, "SMTmc"), replicate(3, "WMTI"))
+diffusion_models = c(replicate(9,"BRIA"), replicate(3, "DKI"), replicate(4, "DTI"), replicate(4, "SMT"), replicate(4, "SMTmc"), replicate(2, "WMTI"))
 # estimate betas, standard errors, t-vals, p-vals
 for (ROW_NUMBER in 1:4){
   for (i in 1:length(outcome_vars)){
@@ -462,4 +465,3 @@ sex_betas=bplot(betas[[2]])
 # merge & save plots
 figure = ggarrange(age_betas, timepoint_betas, sex_betas, agesex_betas,labels = c("a","b","c","d"))
 ggsave("/home/max/Documents/Projects/Diffusion/UKBlong/Results/DiffusionAssocitation.pdf", width = 10, height = 9, figure)
-figure
